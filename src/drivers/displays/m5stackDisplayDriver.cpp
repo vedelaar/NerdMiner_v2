@@ -13,6 +13,7 @@
 
 extern monitor_data mMonitor;
 extern TSettings Settings;
+TFT_eSprite spr = TFT_eSprite(&M5.Lcd);
 
 void m5stackDisplay_Init(void)
 {
@@ -24,7 +25,7 @@ void m5stackDisplay_Init(void)
   M5.Lcd.setCursor(0,0);
   M5.Lcd.fillScreen(BLACK);
   M5.Lcd.println("");
-  M5.Lcd.println("   Han ANother SOLOminer");
+  M5.Lcd.println("         NerdMiner");
   M5.Lcd.drawLine(0,25,320,25,GREENYELLOW);
   M5.Lcd.fillRect(0,30,320,20,WHITE);
   M5.Lcd.println("");
@@ -48,39 +49,49 @@ void m5stackDisplay_AlternateRotation(void)
 {
 }
 
+void m5stackDisplay_progressBar(TFT_eSprite *spr, int x, int y, int w, int h, uint8_t val) {
+    spr->drawRect(x, y, w, h, 0x09F1);
+    spr->fillRect(x + 1, y + 1, w * (((float)val) / 100.0), h - 1, 0x09F1);
+}
+
 void m5stackDisplay_NoScreen(unsigned long mElapsed)
 {
+  spr.createSprite(M5.Lcd.width(), M5.Lcd.height());
+  spr.setColorDepth(8);
   mining_data data = getMiningData(mElapsed);
 
   // Print hashrate to serial
   Serial.printf(">>> Completed %s share(s), %s Khashes, avg. hashrate %s KH/s\n",
                 data.completedShares.c_str(), data.totalKHashes.c_str(), data.currentHashRate.c_str());
-  //Serial.printf(">>> Temperature: %s\n", data.temp.c_str());
+  Serial.printf(">>> Temperature: %s\n", data.temp.c_str());
 
-  M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.setFreeFont(FMB9);
-  M5.Lcd.setCursor(0,0);
-  M5.Lcd.fillScreen(BLACK);
-  M5.Lcd.println("");
-  M5.Lcd.println("   Han ANother SOLOminer");
-  M5.Lcd.drawLine(0,25,320,25,GREENYELLOW);
-  M5.Lcd.fillRect(0,30,320,20,WHITE);
-  M5.Lcd.progressBar(0,30,320,20, data.currentHashRate.toInt());
-  M5.Lcd.println("");
-  M5.Lcd.println("");
-  M5.Lcd.print("Avg. hashrate : "); M5.Lcd.setTextColor(GREEN); M5.Lcd.print(data.currentHashRate); M5.Lcd.setTextColor(WHITE); M5.Lcd.println(" KH/s");
-  M5.Lcd.print("Running time  : "); M5.Lcd.setTextColor(GREEN); M5.Lcd.println(data.timeMining); M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.print("Total hashes  : "); M5.Lcd.setTextColor(GREEN); M5.Lcd.print(data.totalKHashes); M5.Lcd.setTextColor(WHITE); M5.Lcd.println(" KH");
-  M5.Lcd.print("Block templ.  : "); M5.Lcd.setTextColor(YELLOW); M5.Lcd.println(data.templates); M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.print("Best dificulty: "); M5.Lcd.setTextColor(YELLOW); M5.Lcd.println(data.bestDiff); M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.print("Shares 32bits : "); M5.Lcd.setTextColor(YELLOW); M5.Lcd.println(data.completedShares); M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.print("Valid blocks  : "); M5.Lcd.setTextColor(RED); M5.Lcd.println(data.valids); M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.println("");
-  M5.Lcd.drawLine(0,200,320,200,GREENYELLOW);
-  M5.Lcd.print("Pool: "); M5.Lcd.setTextColor(GREENYELLOW); M5.Lcd.print(Settings.PoolAddress); M5.Lcd.print(":"); M5.Lcd.println(Settings.PoolPort); M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.print("IP  : "); M5.Lcd.setTextColor(GREENYELLOW); M5.Lcd.println(WiFi.localIP()); M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.println("");
+  spr.setTextColor(WHITE);
+  spr.setFreeFont(FMB9);
+  spr.setCursor(0,0);
+  spr.fillSprite(BLACK);
+  spr.println("");
+  spr.println("         NerdMiner");
+  spr.drawLine(0,25,320,25,GREENYELLOW);
+  spr.fillRect(0,30,320,20,WHITE);
+  m5stackDisplay_progressBar(&spr, 0,30,320,20, data.currentHashRate.toInt());
+  spr.println("");
+  spr.println("");
+  spr.print("Avg. hashrate : "); spr.setTextColor(GREEN); spr.print(data.currentHashRate); spr.setTextColor(WHITE); spr.println(" KH/s");
+  spr.print("Running time  : "); spr.setTextColor(GREEN); spr.println(data.timeMining); spr.setTextColor(WHITE);
+  spr.print("Total hashes  : "); spr.setTextColor(GREEN); spr.print(data.totalKHashes); spr.setTextColor(WHITE); spr.println(" KH");
+  spr.print("Block templ.  : "); spr.setTextColor(YELLOW); spr.println(data.templates); spr.setTextColor(WHITE);
+  spr.print("Best dificulty: "); spr.setTextColor(YELLOW); spr.println(data.bestDiff); spr.setTextColor(WHITE);
+  spr.print("Shares 32bits : "); spr.setTextColor(YELLOW); spr.println(data.completedShares); spr.setTextColor(WHITE);
+  spr.print("Valid blocks  : "); spr.setTextColor(RED); spr.println(data.valids); spr.setTextColor(WHITE);
+  spr.println("");
+  spr.drawLine(0,200,320,200,GREENYELLOW);
+  spr.setTextColor(GREENYELLOW); spr.print(Settings.PoolAddress); spr.print(":"); spr.println(Settings.PoolPort); spr.setTextColor(WHITE);
+  spr.setTextColor(GREENYELLOW); spr.println(WiFi.localIP()); spr.setTextColor(WHITE);
+  spr.println("");
+
+  spr.pushSprite(0,0);
 }
+
 void m5stackDisplay_LoadingScreen(void)
 {
   Serial.println("Initializing...");
